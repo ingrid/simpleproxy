@@ -9,48 +9,62 @@ from threading import Thread
 var = {}
 port = 8000
 cache = {}
+debug = True
+
+#import logging
+#logger = logging.getLogger('simpleproxy')
+#hdlr = logging.FileHandler('/var/tmp/myapp.log')
+#formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+#hdlr.setFormatter(formatter)
+#logger.addHandler(hdlr) 
+#logger.setLevel(logging.WARNING)
+
 
 class Client(Thread):
     def __init__(self, client, address):
         self.client = client
         self.address = address
         threading.Thread.__init__(self)
+        self.daemon = True
     def run(self):
-        print "Request recieved."
         client = self.client
         address = self.address
         client_data = client.recv(10240)
         if not client_data:
             client.close()
             return
-        print "Request read"
-        print 'client_data:'
-        print client_data[:400]
+        if debug:
+            print 'Request:\n'
+            print client_data[:400]
+            print '\n\n\n'
         key = tuple(re.split(r"[\r\n]+", client_data)[0:2])
         if key in cache:
-            pass
-        print 'caching key:'
-        print key
-        print '-----'
+            print "Cache hit: ", key
+            print '\n\n\n'
+        if debug:
+            print 'Caching Key:\n'
+            print key
+            print '\n\n\n'
+        else:
+            print key
         full_host_string = key[1][6:]
         host = full_host_string
-        print 'host:', host
         host_port = 80
         host_sock = socket.socket()
         host_sock.connect((host, host_port))
-        print 'send returns:'
-        print host_sock.send(client_data.replace('I like dogs', 'I hate dogs'))
-        print 'should equal:'
-        print len(client_data)
-
+        host_sock.send(client_data.replace('I like dogs', 'I hate dogs'))
+        response = []
         while True:
             host_data = host_sock.recv(1000)
+            response.append(host_data)
             if not host_data:
                 break
-            print 'data from server recieved:', len(host_data)
+            client.send(host_data)
+        if debug:
+            print "Response:\n"
+            print ''.join(response)
+            print '\n\n\n'
 
-            print 'amound of data sent to client:', client.send(host_data)
-            print 'we should have just sent data...'
         host_sock.close()
         client.close()
 
