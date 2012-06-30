@@ -1,31 +1,28 @@
 #!/usr/bin/python
 import re
 import socket
+import threading
 import sys
+
+from threading import Thread
 
 var = {}
 port = 8000
 cache = {}
 
-def main():
-    argv = sys.argv
-    var['root'] = "."
-    if len(argv) > 1:
-        var['root'] = argv[1]
-    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    serversocket.bind((socket.gethostname(), port))
-    print "Hostname:", socket.gethostbyname(socket.gethostname())
-    print "Connected on port", port
-    serversocket.listen(5)
-
-    while 1:
-        client, address = serversocket.accept()
+class Client(Thread):
+    def __init__(self, client, address):
+        self.client = client
+        self.address = address
+        threading.Thread.__init__(self)
+    def run(self):
         print "Request recieved."
+        client = self.client
+        address = self.address
         client_data = client.recv(10240)
         if not client_data:
             client.close()
-            continue
+            return
         print "Request read"
         print 'client_data:'
         print client_data[:400]
@@ -56,6 +53,22 @@ def main():
             print 'we should have just sent data...'
         host_sock.close()
         client.close()
+
+def main():
+    argv = sys.argv
+    var['root'] = "."
+    if len(argv) > 1:
+        var['root'] = argv[1]
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    serversocket.bind((socket.gethostname(), port))
+    print "Hostname:", socket.gethostbyname(socket.gethostname())
+    print "Connected on port", port
+    serversocket.listen(5)
+
+    while 1:
+        client, address = serversocket.accept()
+        Client(client, address).start()
 
 if __name__ == "__main__":
     main()
