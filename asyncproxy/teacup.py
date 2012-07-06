@@ -3,9 +3,10 @@
 import argparse
 import logging
 import re
+import select
 import socket
-import threading
 import sys
+import threading
 
 import jsonlogger
 
@@ -44,7 +45,7 @@ def main():
     serversocket.listen(5)
 
     loop = Loop()
-    loop.add_stream(serversocket.fileno, Stream(serversocket))
+    loop.add_stream(serversocket, Stream(serversocket), select.KQ_FILTER_READ)
     loop.run()
 
 if __name__ == "__main__":
