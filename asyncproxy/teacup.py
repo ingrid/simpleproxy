@@ -49,7 +49,7 @@ def main():
 
     loop = Loop()
     loop.listening_sockets.append(serversocket)
-    loop.add_stream(serversocket, Stream(serversocket), select.kevent(serversocket, select.KQ_FILTER_READ))
+    loop.add_socket(serversocket, select.KQ_FILTER_READ)
     loop.run()
 
 if __name__ == "__main__":
