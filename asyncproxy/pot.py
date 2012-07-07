@@ -43,8 +43,7 @@ def main():
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serversocket.bind((socket.gethostname(), port))
-    # log.info('Hostname: %s', socket.gethostbyname(host))
-    print "Hostname: ", socket.gethostbyname(host)
+    log.info('Hostname: %s', socket.gethostbyname(host))
     print "Connected on port", port
     serversocket.listen(5)
 

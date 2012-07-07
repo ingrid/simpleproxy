@@ -56,18 +56,26 @@ class Loop(object):
                     client, address = sock.accept()
                     self.add_socket(client, select.KQ_FILTER_READ)
                     self.requests[client] = ""
+                    continue
                 elif event & select.KQ_FILTER_READ:
                     print "Ready to read!"
                     # Read a ton and assume we have the full request until we figure out how to get a socket empty event/continue to read on socket empty.
+                    if sock not in self.requests.keys():
+                        self.requests[sock] = ""
+
                     while True:
                         try:
+                            print "Reading..."
                             data = sock.recv(4069)
-                            if sock not in self.requests.keys():
-                                self.requests[sock] = ""
+                            if not data:
+                                break
                             self.requests[sock] += data 
                         except socket.error:
                             print "Panic."
                             break
+                    if not self.requests[sock]:
+                        # I do not know.
+                        continue
                     # data = sock.recv(10)
                     # print self.requests[sock]
                     print "Processing request..."
@@ -78,9 +86,13 @@ class Loop(object):
                         # This is a fresh request.
                         # Copypasta.
                         key = re.split(r"[\r\n]+", self.requests[sock])[0]
+                        print "Req: ", self.requests[sock]
+                        print "Key: ", key
                         full_host_string = key.split(" ")[1][7:]
                         print full_host_string 
                         host = full_host_string
+                        if host.endswith("/"):
+                            host = host[:-1]
                         host_port = 80
                         host_sock = socket.socket()
                         print "Connecting to host: ", host
@@ -91,16 +103,21 @@ class Loop(object):
                         del self.requests[sock]
                         self.waiting[host_sock] = sock
 
+                        host_sock.send(self.responses[host_sock])
+
+                        self.add_socket(host_sock, select.KQ_FILTER_READ)
+                        """
                         self.add_socket(host_sock, select.KQ_FILTER_WRITE)
                         # self.poll.unregister(sock.fileno())
-                    
+                        """
                     if sock in self.waiting.keys():
                         """
                         resp_sock = self.waiting[sock]
                         self.responses[resp_sock] = self.requests[sock]
                         self.add_socket(sock, select.KQ_FILTER_WRITE)
                         """
-                        self.waiting[sock].send(self.responses[sock])
+                        # self.waiting[sock].send(self.responses[sock])
+                        self.waiting[sock].send(data)
                         del self.responses[sock]
                         del self.waiting[sock]
                         self.poll.unregister(sock.fileno())
