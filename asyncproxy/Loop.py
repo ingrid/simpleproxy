@@ -18,10 +18,13 @@ class Loop(object):
         # Add epoll and other support.
         self.poll = KQ()
         self.curr_streams = {}
+        self.listening_sockets = []
+        self.active = {}
 
     def add_stream(self, file_descriptor, stream, events):
         self.curr_streams[file_descriptor] = stream
         self.poll.register(file_descriptor, events)
+        self.active[fd] = stream.socket
 
     def add_socket(self, socket, events):
         file_descriptor = socket.fileno;
@@ -38,8 +41,15 @@ class Loop(object):
             print "Got events!"
             while events:
                 file_descriptor, event = events.popitem()
-                print "File descriptor: ", file_descriptor
-                print "Event: ", event
+                sock = active[file_discriptor]
+                if active[file_discriptor] in self.listening_sockets:
+                    print "New connection recieved."
+                    client, address = sock.accept()
+                    self.add_socket(socket, select.KQ_FILTER_READ | select.KQ_FILTER_WRITE)
+                elif event.filter & select.KQ_FILTER_READ:
+                    print "Ready to read!"
+                elif event.filter & select.KQ_FILTER_WRITE:
+                    print "Ready to write!"
             print "Sleeping..."
             time.sleep(POLL_TIMEOUT)
 

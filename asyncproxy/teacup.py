@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-import argparse
+
+
+#import argparse
 import logging
 import re
 import select
@@ -12,6 +14,7 @@ import jsonlogger
 
 from Loop import Loop
 from Stream import Stream
+from Util import EventWrapper
 
 DEFAULT_PORT = 8000
 DEFAULT_HOST = socket.gethostname()
@@ -45,7 +48,8 @@ def main():
     serversocket.listen(5)
 
     loop = Loop()
-    loop.add_stream(serversocket, Stream(serversocket), select.KQ_FILTER_READ)
+    loop.listening_sockets.append(serversocket)
+    loop.add_stream(serversocket, Stream(serversocket), select.kevent(serversocket, select.KQ_FILTER_READ))
     loop.run()
 
 if __name__ == "__main__":
