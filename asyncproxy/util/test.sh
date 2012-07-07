@@ -2,6 +2,6 @@ source ./proxy.sh
 
 function test(){
     proxy teacup
-    curl -L ingridcheung.com
+    curl ingridcheung.com
     proxy none
 }

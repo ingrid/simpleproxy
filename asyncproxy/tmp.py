@@ -25,7 +25,7 @@ sock_ke = select.kevent(sock, select.KQ_FILTER_READ)
 
 kq.control([foo_ke], 0, None)
 kq.control([sock_ke], 0, None)
-while False:
+while True:
     events = kq.control(None, 1, None)
     for event in events:
         print event.ident
