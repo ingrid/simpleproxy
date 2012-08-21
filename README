@@ -1,0 +1,11 @@
+A simple HTTP proxy server for Hacker School.
+
+I based the event loop of Tornado's structure. Currently the event loop relies on KQueue, which only runs on BSD, but it's wrapped up in an abstracted object so alternative polls can be added easily later.
+
+To run:
+
+   From simpleproxy/asyncproxy:
+
+        python teacup.py
+
+   That will start the server on port 8000. Then point your HTTP traffic to that instance.
